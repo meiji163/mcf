@@ -23,8 +23,8 @@ def two_prod(a, b):
     return x, y
 
 def mcf_add_float(a, f):
-    b, m = a.shape
-    out = np.zeros((b,m+1), dtype=np.float64)
+    dim, m = a.shape
+    out = np.zeros((dim,m+1), dtype=np.float64)
     q = f
     for i in range(m):
         q, out[:,i] = two_sum(q, a[:,i])
@@ -32,39 +32,40 @@ def mcf_add_float(a, f):
     return out
 
 def mcf_times_float(a, f):
-    b, m = a.shape
-    e = np.zeros((b,), dtype=np.float64)
-    out = np.zeros((b,m+1), dtype=np.float64)
+    dim, m = a.shape
+    e = np.zeros((dim,), dtype=np.float64)
+    out = np.zeros((dim, m+1), dtype=np.float64)
     for i in range(m): 
-        t, e1 = two_prod(e[:,i], f)
-        out[:,i], e2 = two_sum(t, e)
+        tmp, e1 = two_prod(a[:,i], f)
+        out[:,i], e2 = two_sum(tmp, e)
         e = e1 + e2
     out[:,m] = e
+    return out
 
 def mcf_add(a, b):
     assert a.shape == b.shape
-    batch, m = a.shape
-    out = np.zeros((batch,m+1), dtype=np.float64)
-    e = np.zeros((batch,), dtype=np.float64)
+    dim, m = a.shape
+    out = np.zeros((dim, m+1), dtype=np.float64)
+    e = np.zeros((dim,), dtype=np.float64)
     for i in range(m):
-        t, e1 = two_sum(a[:,i], b[:,i])
-        out[:,i], e2 = two_sum(t, e)
+        tmp, e1 = two_sum(a[:,i], b[:,i])
+        out[:,i], e2 = two_sum(tmp, e)
     out[:,m] = e
     return out
 
 def renorm(a):
-    b = a.shape[0]
+    dim = a.shape[0]
     m = a.shape[1] - 1 
-    k = np.zeros((b,), dtype=np.int32)
+    k = np.zeros((dim,), dtype=np.int32)
     s = a[:,m]
     tmp = np.zeros_like(a, dtype=np.float64)
-    out = np.zeros((b,m), dtype=np.float64)
+    out = np.zeros((dim, m), dtype=np.float64)
 
     for i in reversed(range(1,m+1)):
-        s, t[:,i] = two_sum(a[:,i-1], s)
+        s, tmp[:,i] = two_sum(a[:,i-1], s)
 
     for i in range(1,m+1):
-        s, e = two_sum(s, t[:,i])
+        s, e = two_sum(s, tmp[:,i])
         idx = np.nonzero(e)[0]
         out[idx, k[idx]] = s[idx]
         s[idx] = e[idx]
